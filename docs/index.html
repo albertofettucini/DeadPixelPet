@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dead Pixel Pet — A tiny creature that lives on your desktop</title>
+  <meta name="description" content="Meet Bitsy — a tiny pixel creature with 50+ behaviors, real emotions, and a personality. Free desktop pet for Windows.">
+  <meta property="og:title" content="Dead Pixel Pet">
+  <meta property="og:description" content="A tiny pixel creature that lives on your desktop and has a life of its own.">
+  <meta property="og:type" content="website">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a14;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 50%, rgba(80,210,200,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 30%, rgba(230,160,80,0.06) 0%, transparent 60%);
+      animation: heroGlow 8s ease infinite alternate;
+    }
+
+    @keyframes heroGlow {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-3%, 2%); }
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .bitsy-icon {
+      width: 120px; height: 120px;
+      image-rendering: pixelated;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(255,213,79,0.3));
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(24px, 5vw, 42px);
+      margin: 24px 0 8px;
+      background: linear-gradient(135deg, #ffd54f, #50d2c8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: #999;
+      max-width: 600px;
+      margin: 8px auto 32px;
+      line-height: 1.6;
+    }
+
+    .tagline em {
+      color: #50d2c8;
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background: linear-gradient(135deg, #50d2c8, #3ab8b0);
+      color: #0a0a14;
+      font-size: 16px;
+      font-weight: 800;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(80,210,200,0.3);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(80,210,200,0.5);
+    }
+
+    .download-btn .size { font-weight: 400; opacity: 0.7; font-size: 13px; }
+
+    .platforms {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* Features Grid */
+    .features {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 80px 20px;
+    }
+
+    .features h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: #50d2c8;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, rgba(80,210,200,0.05), rgba(230,160,80,0.03));
+      border: 1px solid rgba(80,210,200,0.15);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(80,210,200,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .feature-card .emoji { font-size: 28px; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .feature-card p { font-size: 13px; line-height: 1.6; color: #888; }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 40px 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat { text-align: center; }
+    .stat .num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 28px;
+      color: #ffd54f;
+    }
+    .stat .label { font-size: 13px; color: #666; margin-top: 4px; }
+
+    /* Screenshot gallery */
+    .gallery {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      text-align: center;
+    }
+    .gallery h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: #ffd54f;
+      margin-bottom: 32px;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .gallery-grid img {
+      width: 100%;
+      border-radius: 12px;
+      border: 2px solid rgba(80,210,200,0.15);
+      transition: all 0.2s;
+    }
+    .gallery-grid img:hover {
+      border-color: rgba(80,210,200,0.4);
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    /* Actions showcase */
+    .actions {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      text-align: center;
+    }
+
+    .actions h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: #e8a050;
+      margin-bottom: 24px;
+    }
+
+    .action-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .action-pill {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+      color: #555;
+    }
+
+    footer a { color: #50d2c8; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <img src="https://raw.githubusercontent.com/user-attachments/assets/bitsy-hero.png" alt="Bitsy" class="bitsy-icon" onerror="this.style.display='none'">
+    <h1>Dead Pixel Pet</h1>
+    <p class="tagline">
+      Meet <em>Bitsy</em> — a tiny pixel creature that lives on your desktop.
+      She walks, jumps, shoots machine guns, builds towers, plants gardens,
+      and has <em>real emotions</em>.
+    </p>
+    <a href="https://github.com/user/DeadPixelPet/releases/latest" class="download-btn">
+      Download for Windows <span class="size">(72 MB)</span>
+    </a>
+    <p class="platforms">Windows 10/11 &bull; Free &bull; No signup required</p>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat"><div class="num">50+</div><div class="label">Unique Behaviors</div></div>
+    <div class="stat"><div class="num">6</div><div class="label">Mood States</div></div>
+    <div class="stat"><div class="num">20+</div><div class="label">Hats & Accessories</div></div>
+    <div class="stat"><div class="num">5900</div><div class="label">Lines of Code</div></div>
+  </div>
+
+  <!-- Features -->
+  <section class="features">
+    <h2>Why Bitsy?</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="emoji">🧠</div>
+        <h3>Real Personality</h3>
+        <p>Bitsy has 6 mood states — happy, bored, lonely, hyper, grumpy, neutral. She reacts to how you treat her. Ignore her and she gets sad. Play with her and she goes hyper.</p>
+      </div>
+      <div class="feature-card">
+        <div class="emoji">💭</div>
+        <h3>Thinks Out Loud</h3>
+        <p>Random thought bubbles based on mood and time of day. "Am I... just pixels?" at 3am. "Good morning!" at sunrise. "I TRUSTED YOU!" when flung.</p>
+      </div>
+      <div class="feature-card">
+        <div class="emoji">🔫</div>
+        <h3>50+ Wild Actions</h3>
+        <p>Machine gun, bomb throwing, darts, magic show, parkour, fishing, gardening, portal teleportation, bug hunting, skateboarding, jetpack, bungee jumping...</p>
+      </div>
+      <div class="feature-card">
+        <div class="emoji">🎨</div>
+        <h3>Fully Customizable</h3>
+        <p>10 body colors, 15 hats (wizard, astronaut, frog!), 15 accessories (sword, camera, magic wand!). Make Bitsy yours.</p>
+      </div>
+      <div class="feature-card">
+        <div class="emoji">⌨️</div>
+        <h3>Knows What You're Doing</h3>
+        <p>Type fast? Bitsy bounces excitedly. Caps lock? "WHY ARE WE YELLING?!" Low battery? "I'm getting tired too..." Christmas? She wears a Santa hat.</p>
+      </div>
+      <div class="feature-card">
+        <div class="emoji">🪟</div>
+        <h3>Lives On Your Desktop</h3>
+        <p>Transparent overlay — Bitsy walks, jumps, and climbs on your actual screen. Click through her to your apps. Grab and fling her around.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="gallery">
+    <h2>Bitsy in Action</h2>
+    <div class="gallery-grid">
+      <img src="screenshots/ss1.png" alt="Bitsy ninja mode on desktop">
+      <img src="screenshots/ss3.png" alt="Customize panel with turkuaz theme">
+      <img src="screenshots/ss5.png" alt="Bitsy shooting machine gun">
+      <img src="screenshots/ss2.png" alt="Bitsy with thought bubble">
+      <img src="screenshots/ss4.png" alt="Bitsy singing a song">
+      <img src="screenshots/ss6.png" alt="Bitsy thinking">
+    </div>
+  </section>
+
+  <!-- All Actions -->
+  <section class="actions">
+    <h2>Everything Bitsy Can Do</h2>
+    <div class="action-pills">
+      <span class="action-pill">🚶 Walk</span>
+      <span class="action-pill">🏃 Sprint</span>
+      <span class="action-pill">🦘 Jump</span>
+      <span class="action-pill">🧗 Climb walls</span>
+      <span class="action-pill">🌀 Tumble</span>
+      <span class="action-pill">🛹 Skateboard</span>
+      <span class="action-pill">🦸 Superhero fly</span>
+      <span class="action-pill">🕺 Disco dance</span>
+      <span class="action-pill">🤧 Sneeze</span>
+      <span class="action-pill">🎵 Sing</span>
+      <span class="action-pill">🌈 Rainbow trail</span>
+      <span class="action-pill">🍕 Eat</span>
+      <span class="action-pill">👯 Clone</span>
+      <span class="action-pill">🦘 Trampoline</span>
+      <span class="action-pill">🥷 Ninja</span>
+      <span class="action-pill">🤳 Selfie</span>
+      <span class="action-pill">🪢 Bungee jump</span>
+      <span class="action-pill">🎨 Graffiti</span>
+      <span class="action-pill">🚀 Jetpack</span>
+      <span class="action-pill">🎈 Balloon</span>
+      <span class="action-pill">🕷️ Spider hang</span>
+      <span class="action-pill">😂 Laugh</span>
+      <span class="action-pill">😭 Cry</span>
+      <span class="action-pill">😤 Get angry</span>
+      <span class="action-pill">😪 Get drowsy</span>
+      <span class="action-pill">💤 Sleep</span>
+      <span class="action-pill">🔫 Machine gun</span>
+      <span class="action-pill">💣 Throw bombs</span>
+      <span class="action-pill">🎯 Play darts</span>
+      <span class="action-pill">🛏️ Bedtime</span>
+      <span class="action-pill">🎣 Fish</span>
+      <span class="action-pill">🐛 Bug hunt</span>
+      <span class="action-pill">🌱 Plant garden</span>
+      <span class="action-pill">🏄 Cursor surf</span>
+      <span class="action-pill">🔮 Portal teleport</span>
+      <span class="action-pill">🎁 Open gift</span>
+      <span class="action-pill">🏗️ Build tower</span>
+      <span class="action-pill">🪞 Mirror pose</span>
+      <span class="action-pill">🎮 Play gameboy</span>
+      <span class="action-pill">🏕️ Campfire</span>
+      <span class="action-pill">💌 Love letter</span>
+      <span class="action-pill">🐾 Pet a kitten</span>
+      <span class="action-pill">🎪 Magic trick</span>
+      <span class="action-pill">🧗 Parkour</span>
+      <span class="action-pill">👾 Clone invasion</span>
+      <span class="action-pill">🍅 Pomodoro timer</span>
+    </div>
+  </section>
+
+  <footer>
+    <p>Made with pixels and love &bull; <a href="https://github.com/user/DeadPixelPet">GitHub</a></p>
+  </footer>
+
+</body>
+</html>

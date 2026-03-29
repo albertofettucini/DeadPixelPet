@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dead Pixel Pet</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      user-select: none;
+      -webkit-app-region: no-drag;
+    }
+    #game-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    /* ─── ANIMATED RETRO PANEL ─── */
+    @keyframes panel-glow {
+      0%   { border-color: #50d2c8; box-shadow: 0 0 15px rgba(80,210,200,0.3), 0 0 40px rgba(80,210,200,0.08), 0 8px 30px rgba(0,0,0,0.6); }
+      33%  { border-color: #e8a050; box-shadow: 0 0 15px rgba(230,160,80,0.3), 0 0 40px rgba(230,160,80,0.08), 0 8px 30px rgba(0,0,0,0.6); }
+      66%  { border-color: #333; box-shadow: 0 0 15px rgba(50,50,50,0.3), 0 0 40px rgba(80,210,200,0.05), 0 8px 30px rgba(0,0,0,0.6); }
+      100% { border-color: #50d2c8; box-shadow: 0 0 15px rgba(80,210,200,0.3), 0 0 40px rgba(80,210,200,0.08), 0 8px 30px rgba(0,0,0,0.6); }
+    }
+    @keyframes bg-shift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .retro-panel {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #0a0a14 0%, #0e1c1a 25%, #1a1008 50%, #0e1c1a 75%, #0a0a14 100%);
+      background-size: 300% 300%;
+      animation: bg-shift 8s ease infinite, panel-glow 6s ease infinite;
+      border: 3px solid #50d2c8;
+      border-radius: 14px;
+      padding: 16px 18px;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      z-index: 1000;
+      pointer-events: auto;
+      overflow: hidden;
+    }
+    /* Animated shimmer overlay */
+    .retro-panel::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(80,210,200,0.04) 60deg,
+        transparent 120deg,
+        rgba(230,160,80,0.04) 180deg,
+        transparent 240deg,
+        rgba(80,210,200,0.03) 300deg,
+        transparent 360deg
+      );
+      animation: panel-rotate 12s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes panel-rotate {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .retro-panel > * { position: relative; z-index: 1; }
+    .retro-panel h2 {
+      margin-bottom: 14px;
+      font-size: 12px;
+      background: linear-gradient(90deg, #50d2c8, #e8a050, #50d2c8);
+      background-size: 200% 100%;
+      animation: bg-shift 4s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .retro-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 8px;
+      background: linear-gradient(135deg, #50d2c8, #3ab8b0);
+      color: #0a0a14;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(80,210,200,0.25);
+    }
+    .retro-btn:hover {
+      background: linear-gradient(135deg, #e8a050, #d08030);
+      box-shadow: 0 3px 12px rgba(230,160,80,0.4);
+    }
+    .retro-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 4px rgba(80,210,200,0.2);
+      border-left: 3px solid #4a9a8a;
+      transform: translateY(1px);
+    }
+
+    /* Settings overlay */
+    #settings-overlay { width: 300px; }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .setting-row label { color: #8ab; font-family: 'Courier New', monospace; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+    .setting-row input[type="range"] {
+      width: 130px;
+      accent-color: #50d2c8;
+    }
+    .setting-row input[type="checkbox"] {
+      accent-color: #50d2c8;
+      width: 16px; height: 16px;
+    }
+
+    /* Stats overlay */
+    #stats-overlay { width: 260px; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+    }
+    .stat-row .stat-label { color: #8ab; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-row .stat-value { color: #e8a050; font-weight: 700; }
+
+    /* ─── ANIMATED TURQUOISE CUSTOMIZE OVERLAY ─── */
+    #customize-overlay {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px;
+      background: linear-gradient(135deg, #0a0a14 0%, #0e1c1a 25%, #1a1008 50%, #0e1c1a 75%, #0a0a14 100%);
+      background-size: 300% 300%;
+      animation: bg-shift 8s ease infinite, panel-glow 6s ease infinite;
+      padding: 0;
+      color: #d8eeee;
+      font-family: 'Courier New', monospace;
+      z-index: 1000;
+      pointer-events: auto;
+      border: 3px solid #50d2c8;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    /* Same rotating shimmer as retro-panel */
+    #customize-overlay::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(80,210,200,0.04) 60deg,
+        transparent 120deg,
+        rgba(230,160,80,0.04) 180deg,
+        transparent 240deg,
+        rgba(80,210,200,0.03) 300deg,
+        transparent 360deg
+      );
+      animation: panel-rotate 12s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #customize-overlay > * { position: relative; z-index: 1; }
+    .cust-header {
+      background: linear-gradient(135deg, #50d2c8 0%, #3ab8b0 50%, #2a9a94 100%);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: grab;
+      user-select: none;
+    }
+    .cust-header:active { cursor: grabbing; }
+    .cust-drag-hint {
+      margin-left: auto;
+      color: rgba(10,60,58,0.4);
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+    .cust-header h2 {
+      font-size: 12px;
+      color: #f0ffff;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+    .cust-header .cust-emoji { font-size: 16px; }
+    .cust-tabs {
+      display: flex;
+      background: #0c1516;
+    }
+    .cust-tab {
+      flex: 1;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #587878;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+    .cust-tab:hover { color: #80d0c8; background: rgba(80,210,200,0.05); }
+    .cust-tab.active {
+      color: #60e0d8;
+      border-bottom-color: #3ab8b0;
+      background: rgba(80,210,200,0.08);
+    }
+    .cust-body {
+      padding: 10px 14px;
+      max-height: 310px;
+      overflow-y: auto;
+    }
+    .cust-body::-webkit-scrollbar { width: 6px; }
+    .cust-body::-webkit-scrollbar-track { background: transparent; }
+    .cust-body::-webkit-scrollbar-thumb { background: #3ab8b0; border-radius: 3px; }
+    .cust-section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #40b8b0;
+      margin-bottom: 8px;
+      font-family: 'Courier New', monospace;
+      opacity: 0.7;
+    }
+    .cust-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .cust-item {
+      aspect-ratio: 1;
+      border: 2px solid #1a2e2e;
+      background: #122020;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .cust-item:hover {
+      border-color: #50b0a8;
+      background: #1a3030;
+      transform: translateY(-1px);
+    }
+    .cust-item.selected {
+      border-color: #60e0d8;
+      background: #183030;
+      box-shadow: 0 0 10px rgba(80,210,200,0.25), inset 0 0 0 1px rgba(80,210,200,0.15);
+    }
+    .cust-item .cust-icon { font-size: 20px; line-height: 1; }
+    .cust-item .cust-label {
+      font-size: 7px;
+      color: #688888;
+      margin-top: 2px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cust-item.selected .cust-label { color: #60e0d8; }
+    @keyframes color-wave {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 100%; }
+      100% { background-position: 0% 50%; }
+    }
+    .cust-color-dot {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      border: 2px solid rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+      background-size: 300% 300% !important;
+      animation: color-wave 3s ease infinite;
+    }
+    /* Each dot gets a wave gradient mixed with its base color via inline style */
+    .cust-color-dot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.25) 0%,
+        rgba(255,255,255,0) 40%,
+        rgba(255,255,255,0.12) 60%,
+        rgba(255,255,255,0) 100%
+      );
+      background-size: 250% 250%;
+      animation: color-wave 2.5s ease infinite;
+      pointer-events: none;
+    }
+    .cust-color-dot.selected {
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.35);
+    }
+    .cust-color-dot.selected::after {
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.35) 0%,
+        rgba(255,255,255,0) 35%,
+        rgba(255,255,255,0.2) 55%,
+        rgba(255,255,255,0) 100%
+      );
+      background-size: 250% 250%;
+    }
+    .cust-preview {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    .cust-preview canvas {
+      image-rendering: pixelated;
+      background: #0c1516;
+      border: 2px solid #1a2e2e;
+      border-radius: 8px;
+    }
+    #customize-close {
+      margin: 0 14px 14px;
+      width: calc(100% - 28px);
+      padding: 9px;
+      background: linear-gradient(135deg, #50d2c8, #3ab8b0);
+      color: #0e1a1c;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(80,210,200,0.25);
+    }
+    #customize-close:hover {
+      background: linear-gradient(135deg, #40c0b8, #30a8a0);
+      box-shadow: 0 3px 12px rgba(80,210,200,0.4);
+    }
+    #customize-close:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 4px rgba(80,210,200,0.2);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Settings Panel -->
+  <div id="settings-overlay" class="retro-panel">
+    <h2>⚙ Settings</h2>
+    <div class="setting-row">
+      <label>Volume</label>
+      <input type="range" id="set-volume" min="0" max="100" value="50">
+    </div>
+    <div class="setting-row">
+      <label>Creature Speed</label>
+      <input type="range" id="set-speed" min="20" max="200" value="80">
+    </div>
+    <div class="setting-row">
+      <label>Bounciness</label>
+      <input type="range" id="set-bounce" min="20" max="95" value="65">
+    </div>
+    <div class="setting-row">
+      <label>Start with Windows</label>
+      <input type="checkbox" id="set-startup">
+    </div>
+    <div class="setting-row">
+      <label>Activity Labels</label>
+      <input type="checkbox" id="set-labels" checked>
+    </div>
+    <button id="settings-close" class="retro-btn">Close</button>
+  </div>
+
+  <!-- Stats Panel -->
+  <div id="stats-overlay" class="retro-panel">
+    <h2>📊 Bitsy Stats</h2>
+    <div class="stat-row"><span class="stat-label">Total Flings</span><span class="stat-value" id="stat-flings">0</span></div>
+    <div class="stat-row"><span class="stat-label">Total Bounces</span><span class="stat-value" id="stat-bounces">0</span></div>
+    <div class="stat-row"><span class="stat-label">Distance Traveled</span><span class="stat-value" id="stat-distance">0 px</span></div>
+    <div class="stat-row"><span class="stat-label">Time Alive</span><span class="stat-value" id="stat-alive">0m</span></div>
+    <div class="stat-row"><span class="stat-label">Times Grabbed</span><span class="stat-value" id="stat-grabs">0</span></div>
+    <div class="stat-row"><span class="stat-label">Longest Fling</span><span class="stat-value" id="stat-longest">0 px</span></div>
+    <button id="stats-close" class="retro-btn">Close</button>
+  </div>
+
+  <!-- Customize Panel -->
+  <div id="customize-overlay">
+    <div class="cust-header" id="cust-drag-handle">
+      <span class="cust-emoji">✨</span>
+      <h2>Customize Bitsy</h2>
+      <span class="cust-drag-hint">⣿⣿</span>
+    </div>
+    <div class="cust-tabs">
+      <div class="cust-tab active" data-tab="color">🎨 Color</div>
+      <div class="cust-tab" data-tab="hat">🎩 Hat</div>
+      <div class="cust-tab" data-tab="accessory">✨ Accessory</div>
+    </div>
+    <div class="cust-body">
+      <!-- Preview -->
+      <div class="cust-preview">
+        <canvas id="cust-preview-canvas" width="96" height="96"></canvas>
+      </div>
+      <!-- Color Tab -->
+      <div class="cust-panel" id="cpanel-color">
+        <div class="cust-section-label">Body Color</div>
+        <div class="cust-grid" id="color-grid"></div>
+      </div>
+      <!-- Hat Tab -->
+      <div class="cust-panel" id="cpanel-hat" style="display:none">
+        <div class="cust-section-label">Headwear</div>
+        <div class="cust-grid" id="hat-grid"></div>
+      </div>
+      <!-- Accessory Tab -->
+      <div class="cust-panel" id="cpanel-accessory" style="display:none">
+        <div class="cust-section-label">Accessories</div>
+        <div class="cust-grid" id="acc-grid"></div>
+      </div>
+    </div>
+    <button id="customize-close">Done ✓</button>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
