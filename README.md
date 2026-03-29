@@ -23,12 +23,12 @@ Bitsy is a desktop pet with **50+ unique behaviors**, real emotions, and a perso
 
 ## Download
 
-[Download for Windows](https://github.com/user/DeadPixelPet/releases/latest) (72 MB)
+[Download for Windows](https://github.com/albertofettucini/DeadPixelPet/releases/latest) (72 MB)
 
 ## Run from Source
 
 ```bash
-git clone https://github.com/user/DeadPixelPet.git
+git clone https://github.com/albertofettucini/DeadPixelPet.git
 cd DeadPixelPet
 npm install
 npm start
